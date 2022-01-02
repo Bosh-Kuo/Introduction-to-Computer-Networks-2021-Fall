@@ -1,0 +1,8 @@
+this is first line
+
+this is third line
+this is fourth line
+
+這是中文字喔
+
+end.

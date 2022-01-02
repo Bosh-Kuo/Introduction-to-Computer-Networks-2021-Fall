@@ -1,0 +1,57 @@
+1 package main
+2 
+3 import (
+4 	"bufio"
+5 	"fmt"
+6 	"net"
+7 	"os"
+8 )
+9 
+10 func check(e error) {
+11 	if e != nil {
+12 		panic(e)
+13 	}
+14 }
+15 
+16 func main() {
+17 	fileName := ""
+18 
+19 	// prompts the user for the upload filename
+20 	fmt.Printf("Input filename:")
+21 	fmt.Scanf("%s", &fileName)
+22 
+23 	// connects to the server that polly implements and runs already on the workstation at port 12000
+24 	// conn, errc := net.Dial("tcp", "140.112.42.221:12015")
+25 	conn, errc := net.Dial("tcp", "127.0.0.1:12015")
+26 	check(errc)
+27 	defer conn.Close()
+28 	writer := bufio.NewWriter(conn)
+29 
+30 	// Open the file
+31 	f_in, erro := os.Open(fileName)
+32 	check(erro)
+33 	defer f_in.Close()
+34 	scnner := bufio.NewScanner(f_in)
+35 
+36 	// get file information
+37 	fi, _ := os.Stat(fileName)
+38 
+39 	// sends first the file size
+40 	fmt.Printf("Send the file size first: %d\n", fi.Size())
+41 	fileSize := fmt.Sprintf("%d\n", fi.Size())
+42 	writer.WriteString(fileSize)
+43 
+44 	// Read the content and send it to conn
+45 	for scnner.Scan() {
+46 		text := fmt.Sprintf("%s\n", scnner.Text())
+47 		_, errw := writer.WriteString(text)
+48 		check(errw)
+49 	}
+50 	writer.Flush()
+51 
+52 	// prints what the server says
+53 	scanner := bufio.NewScanner(conn)
+54 	if scanner.Scan() {
+55 		fmt.Printf("%s", scanner.Text())
+56 	}
+57 }

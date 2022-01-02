@@ -1,0 +1,53 @@
+1 package main
+2 
+3 import (
+4 	"bufio"
+5 	"fmt"
+6 	"net"
+7 	"os"
+8 	"strconv"
+9 )
+10 
+11 func check(e error) {
+12 	if e != nil {
+13 		panic(e)
+14 	}
+15 }
+16 
+17 func main() {
+18 	fmt.Println("Launching server...")
+19 	ln, _ := net.Listen("tcp", ":12015")
+20 	conn, _ := ln.Accept()
+21 	defer ln.Close()
+22 	defer conn.Close()
+23 
+24 	reader := bufio.NewReader(conn)
+25 	size, errr := reader.ReadString('\n')
+26 	check(errr)
+27 
+28 	var l = len(size)
+29 	size = size[:l-1]
+30 	file_size, _ := strconv.Atoi(size)
+31 
+32 	f_out, _ := os.Create("whatever.txt")
+33 	defer f_out.Close()
+34 
+35 	count :=1
+36 	readlen := 0 
+37 	for readlen < file_size{
+38 		line, _ := reader.ReadString('\n')
+39 		readlen += len(line)
+40 		fmt.Fprintf(f_out, "%d ",count)
+41 		fmt.Fprintf(f_out, "%s",line)
+42 		count++
+43 	}
+44 	
+45 	// get file information
+46 	fi, _ := os.Stat("whatever.txt")
+47 	fmt.Printf("Original file size: %d\nNew file size: %d\n", file_size, fi.Size())
+48 	writer := bufio.NewWriter(conn)
+49 	newline := fmt.Sprintf("Original file size: %d, New file size: %d\n", file_size, fi.Size())
+50 	_, errw := writer.WriteString(newline)
+51 	check(errw)
+52 	writer.Flush()
+53 }
